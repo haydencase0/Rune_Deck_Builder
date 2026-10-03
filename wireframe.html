@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rune Roguelike — Battle Wireframe</title>
+  <style>
+    :root {
+      --ink: #f8ead2;
+      --muted: #c5b499;
+      --dim: #8c7b70;
+      --felt: #3b1e35;
+      --felt-deep: #201526;
+      --gold: #e3b86b;
+      --gold-deep: #9b6b43;
+      --card-ink: #392b37;
+      --card-back: #6f304d;
+      --health: #d16761;
+      --mana: #70a7c4;
+      --sanity: #af8cc0;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: #110d17; font-family: Georgia, 'Times New Roman', serif; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    .app { min-height: 100vh; padding: 22px; background: radial-gradient(ellipse at 50% -20%, rgba(233,181,101,.18), transparent 42%), linear-gradient(135deg, rgba(255,255,255,.025) 25%, transparent 25%) 0 0 / 9px 9px, #110d17; }
+    .table { width: min(1480px, 100%); min-height: calc(100vh - 44px); margin: auto; position: relative; overflow: hidden; padding: 22px 30px 24px; border: 2px solid var(--gold-deep); border-radius: 18px; background: radial-gradient(ellipse at 50% 45%, rgba(133,45,79,.38), transparent 64%), radial-gradient(ellipse at 50% 0%, rgba(232,165,94,.08), transparent 40%), repeating-linear-gradient(112deg, rgba(255,255,255,.018) 0 2px, transparent 2px 8px), var(--felt-deep); box-shadow: inset 0 0 80px rgba(0,0,0,.65), 0 20px 50px rgba(0,0,0,.45); }
+    .table::before, .table::after { content: ''; position: absolute; pointer-events: none; border: 1px solid rgba(227,184,107,.23); border-radius: 14px; }
+    .table::before { inset: 9px; }
+    .table::after { inset: 14px; border-color: rgba(255,255,255,.05); }
+    .topbar, .bottom-bar { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { color: var(--gold); letter-spacing: .11em; text-transform: uppercase; font-size: 14px; }
+    .subline { margin-top: 4px; color: var(--dim); font: 11px Arial, sans-serif; }
+    .phase { display: flex; align-items: center; gap: 5px; color: var(--dim); font: 11px Arial, sans-serif; }
+    .phase span { padding: 7px 10px; border: 1px solid rgba(227,184,107,.22); border-radius: 999px; }
+    .phase .active { color: #261b26; background: var(--gold); border-color: var(--gold); }
+
+    .opponent-hand-wrap { position: relative; z-index: 2; width: min(600px, 72%); margin: 19px auto 0; text-align: center; }
+    .label { display: block; margin-bottom: 7px; color: var(--muted); font: 11px Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .fan { height: 82px; position: relative; display: flex; justify-content: center; align-items: end; }
+    .fan .card { width: 54px; height: 73px; position: relative; margin: 0 -3px; border: 2px solid var(--gold-deep); border-radius: 7px; background: repeating-linear-gradient(45deg, rgba(255,255,255,.08) 0 2px, transparent 2px 6px), var(--card-back); box-shadow: 0 4px 9px rgba(0,0,0,.42); }
+    .fan .card::before { content: '✦'; display: grid; place-items: center; height: 100%; color: rgba(238,190,110,.5); font-size: 22px; }
+    .fan .card:nth-child(1), .fan .card:nth-child(10) { transform: translateY(8px) rotate(-9deg); }
+    .fan .card:nth-child(2), .fan .card:nth-child(9) { transform: translateY(4px) rotate(-6deg); }
+    .fan .card:nth-child(3), .fan .card:nth-child(8) { transform: translateY(1px) rotate(-4deg); }
+    .fan .card:nth-child(4), .fan .card:nth-child(7) { transform: translateY(-1px) rotate(-2deg); }
+    .fan .card:nth-child(5), .fan .card:nth-child(6) { transform: translateY(-2px); }
+
+    .battle-zone { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) 86px minmax(0, 1fr); align-items: center; gap: 18px; margin-top: 24px; }
+    .lane { min-width: 0; }
+    .lane-heading { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+    .lane-heading h2 { margin: 0; color: var(--ink); font-size: 16px; font-weight: normal; }
+    .lane-heading span { color: var(--dim); font: 10px Arial, sans-serif; text-transform: uppercase; letter-spacing: .1em; }
+    .rune-row { display: grid; grid-template-columns: repeat(7, minmax(40px, 1fr)); gap: 8px; }
+    .rune-slot { min-width: 0; aspect-ratio: .9; display: grid; place-items: center; position: relative; border: 1px solid rgba(227,184,107,.24); border-radius: 7px; background: rgba(7,5,11,.23); }
+    .rune-slot::after { content: attr(data-slot); position: absolute; bottom: 4px; color: rgba(255,255,255,.32); font: 9px Arial, sans-serif; }
+    .rune-slot.active { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(227,184,107,.16), 0 0 18px rgba(227,184,107,.26); }
+    .rune-stone { width: 64%; aspect-ratio: 1; display: grid; place-items: center; border: 2px solid #7e8d8e; border-radius: 45% 55% 50% 48%; color: #263234; font-size: clamp(18px, 2.5vw, 30px); background: radial-gradient(circle at 30% 24%, #f0e3c7 0 7%, #c9c7b7 8% 48%, #8a9692 100%); box-shadow: inset 2px 2px 3px rgba(255,255,255,.62), inset -3px -4px 4px rgba(29,31,31,.35), 0 4px 5px rgba(0,0,0,.35); }
+    .empty { color: rgba(227,184,107,.45); font: 15px Arial, sans-serif; }
+    .empty .rune-stone { display: none; }
+
+    .mirror-wrap { min-height: 260px; display: flex; justify-content: center; position: relative; }
+    .mirror-frame { width: 48px; min-height: 270px; position: relative; border: 3px solid var(--gold-deep); border-radius: 48% 48% 10px 10px; background: linear-gradient(90deg, #5f453b, var(--gold) 18%, #efd48c 35%, #8a5b40 55%, #e0ac62 77%, #624337); box-shadow: 0 0 0 2px rgba(0,0,0,.45), 0 0 24px rgba(227,184,107,.19); }
+    .mirror-glass { position: absolute; inset: 7px 6px; overflow: hidden; border: 1px solid rgba(255,244,206,.72); border-radius: 45% 45% 7px 7px; background: linear-gradient(105deg, rgba(255,255,255,.58) 0 7%, transparent 8% 33%, rgba(255,255,255,.22) 34% 38%, transparent 39% 68%, rgba(42,60,73,.3) 69% 100%), linear-gradient(180deg, #d2d8c9, #89a7ad 46%, #536c76); }
+    .mirror-glass::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(165deg, transparent 0 16px, rgba(255,255,255,.16) 17px 18px, transparent 19px 32px); mix-blend-mode: screen; }
+    .mirror-glass::after { content: '✦'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,247,203,.9); font-size: 17px; text-shadow: 0 0 11px #fff4bd; }
+    .mirror-caption { position: absolute; top: calc(100% + 9px); width: 120px; left: 50%; transform: translateX(-50%); color: var(--gold); text-align: center; font: 10px Arial, sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+    .mirror-frame::before, .mirror-frame::after { content: '◆'; position: absolute; left: 50%; transform: translateX(-50%); color: var(--gold); font-size: 10px; text-shadow: 0 0 5px rgba(255,227,143,.7); }
+    .mirror-frame::before { top: -12px; }
+    .mirror-frame::after { bottom: -12px; }
+
+    .status-line { position: relative; z-index: 2; max-width: 680px; margin: 22px auto 0; padding: 10px 15px; border: 1px solid rgba(227,184,107,.3); border-radius: 5px; background: rgba(14,10,20,.55); text-align: center; color: var(--muted); font-size: 13px; }
+    .status-line strong { color: var(--gold); font-weight: normal; }
+    .player-area { position: relative; z-index: 2; margin-top: 22px; }
+    .player-header { display: flex; justify-content: space-between; align-items: end; margin-bottom: 9px; }
+    .player-header .name { color: var(--ink); font-size: 17px; }
+    .resources { display: flex; gap: 10px; }
+    .resource { display: grid; grid-template-columns: 54px 75px; gap: 5px; align-items: center; color: var(--muted); font: 10px Arial, sans-serif; }
+    .bar { height: 7px; overflow: hidden; border: 1px solid rgba(255,255,255,.25); border-radius: 4px; background: rgba(0,0,0,.32); }
+    .fill { height: 100%; background: var(--health); }
+    .resource.mana .fill { width: 62%; background: var(--mana); }
+    .resource.sanity .fill { width: 78%; background: var(--sanity); }
+    .resource.health .fill { width: 82%; }
+    .hand-panel { padding: 11px 13px 12px; border: 1px solid rgba(227,184,107,.36); border-radius: 6px; background: linear-gradient(180deg, rgba(246,234,209,.11), rgba(0,0,0,.18)); }
+    .hand { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+    .hand-card { min-width: 0; aspect-ratio: .72; display: grid; place-items: center; position: relative; border: 2px solid #d7bc8a; border-radius: 6px; color: var(--card-ink); background: linear-gradient(135deg, #fff2d2, #c9b994); box-shadow: 0 5px 10px rgba(0,0,0,.35); transition: transform .15s, box-shadow .15s; }
+    .hand-card:hover, .hand-card.selected { transform: translateY(-8px); box-shadow: 0 10px 15px rgba(0,0,0,.42), 0 0 0 2px var(--gold); }
+    .hand-card.selected { background: linear-gradient(135deg, #fff6d9, #d3e0cf); }
+    .hand-card.locked { opacity: .7; }
+    .hand-card.locked::after { content: 'LOCKED'; position: absolute; bottom: 5px; color: #846249; font: 8px Arial, sans-serif; letter-spacing: .06em; }
+    .card-number { position: absolute; top: 4px; left: 5px; color: #735d4e; font: 9px Arial, sans-serif; }
+    .hand-card .rune-stone { width: 57%; font-size: clamp(15px, 2vw, 24px); }
+    .card-cost { position: absolute; right: 5px; top: 4px; color: #735d4e; font: 9px Arial, sans-serif; }
+    .controls { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 11px; }
+    .hint { color: var(--dim); font: 11px Arial, sans-serif; }
+    .buttons { display: flex; gap: 8px; }
+    .button { padding: 9px 14px; border: 1px solid var(--gold-deep); border-radius: 4px; color: #261b26; background: var(--gold); box-shadow: inset 0 1px rgba(255,255,255,.35); }
+    .button.secondary { color: var(--ink); background: rgba(0,0,0,.2); border-color: rgba(227,184,107,.45); }
+    .bottom-bar { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(227,184,107,.2); color: var(--dim); font: 10px Arial, sans-serif; }
+    .event-log { display: flex; gap: 8px; }
+    .event-log span { padding: 4px 7px; border: 1px solid rgba(227,184,107,.18); border-radius: 3px; }
+
+    @media (max-width: 950px) {
+      .table { padding: 18px 18px 22px; }
+      .battle-zone { grid-template-columns: 1fr; gap: 20px; }
+      .mirror-wrap { min-height: 68px; }
+      .mirror-frame { width: 72%; min-height: 44px; height: 44px; border-radius: 7px; }
+      .mirror-glass { inset: 6px; border-radius: 4px; }
+      .mirror-caption { top: 50%; left: auto; right: 10px; width: auto; transform: translateY(-50%); }
+      .mirror-frame::before { top: 50%; left: -12px; transform: translateY(-50%); }
+      .mirror-frame::after { bottom: auto; top: 50%; left: auto; right: -12px; transform: translateY(-50%); }
+      .opponent-hand-wrap { width: 100%; }
+    }
+    @media (max-width: 650px) {
+      .app { padding: 0; }
+      .table { min-height: 100vh; border-radius: 0; border-left: 0; border-right: 0; }
+      .topbar, .player-header, .controls { align-items: flex-start; flex-direction: column; }
+      .phase, .resources { width: 100%; }
+      .resources { justify-content: space-between; }
+      .resource { flex: 1; grid-template-columns: 1fr; }
+      .hand { grid-template-columns: repeat(5, 1fr); }
+      .hand-card { aspect-ratio: .9; }
+      .bottom-bar { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="table">
+      <header class="topbar">
+        <div><div class="brand">Rune Roguelike</div><div class="subline">Round 03 · Local match · Seed 1842</div></div>
+        <nav class="phase" aria-label="round phases"><span>Reroll</span><span class="active">Place</span><span>Resolve</span><span>Outcome</span></nav>
+      </header>
+
+      <section class="opponent-hand-wrap" aria-label="opponent hand">
+        <span class="label">Enemy player hand · 10 runes</span>
+        <div class="fan"><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div></div>
+      </section>
+
+      <section class="battle-zone" aria-label="rune lanes and mirror">
+        <article class="lane">
+          <div class="lane-heading"><h2>Your played runes</h2><span>5 / 7 placed</span></div>
+          <div class="rune-row">
+            <div class="rune-slot" data-slot="1"><div class="rune-stone">⊙</div></div><div class="rune-slot" data-slot="2"><div class="rune-stone">╳</div></div><div class="rune-slot" data-slot="3"><div class="rune-stone">⌁</div></div><div class="rune-slot" data-slot="4"><div class="rune-stone">◈</div></div><div class="rune-slot" data-slot="5"><div class="rune-stone">△</div></div><div class="rune-slot empty" data-slot="6">+</div><div class="rune-slot empty" data-slot="7">+</div>
+          </div>
+        </article>
+
+        <div class="mirror-wrap" aria-label="central mirror"><div class="mirror-frame"><div class="mirror-glass"></div><div class="mirror-caption">the mirror</div></div></div>
+
+        <article class="lane">
+          <div class="lane-heading"><h2>Enemy played runes</h2><span>7 / 7 placed</span></div>
+          <div class="rune-row">
+            <div class="rune-slot" data-slot="7"><div class="rune-stone">◌</div></div><div class="rune-slot" data-slot="6"><div class="rune-stone">╳</div></div><div class="rune-slot" data-slot="5"><div class="rune-stone">⊙</div></div><div class="rune-slot active" data-slot="4"><div class="rune-stone">✦</div></div><div class="rune-slot" data-slot="3"><div class="rune-stone">△</div></div><div class="rune-slot" data-slot="2"><div class="rune-stone">⌁</div></div><div class="rune-slot" data-slot="1"><div class="rune-stone">◈</div></div>
+          </div>
+        </article>
+      </section>
+
+      <div class="status-line"><strong>Placement phase · Your response</strong><br>Choose two visible runes from your hand. Next activation: slot 6.</div>
+
+      <section class="player-area">
+        <div class="player-header">
+          <div><div class="name">Your hand · 10 runes</div><div class="subline">Select runes to place or reroll before ending the phase.</div></div>
+          <div class="resources" aria-label="player resources">
+            <div class="resource health"><span>HEALTH 82</span><div class="bar"><div class="fill"></div></div></div>
+            <div class="resource mana"><span>MANA 06</span><div class="bar"><div class="fill"></div></div></div>
+            <div class="resource sanity"><span>SANITY 91</span><div class="bar"><div class="fill"></div></div></div>
+          </div>
+        </div>
+        <div class="hand-panel">
+          <div class="hand" aria-label="ten rune hand">
+            <button class="hand-card"><span class="card-number">01</span><span class="card-cost">1</span><div class="rune-stone">◈</div></button>
+            <button class="hand-card selected"><span class="card-number">02</span><span class="card-cost">2</span><div class="rune-stone">⌁</div></button>
+            <button class="hand-card locked"><span class="card-number">03</span><span class="card-cost">1</span><div class="rune-stone">△</div></button>
+            <button class="hand-card"><span class="card-number">04</span><span class="card-cost">3</span><div class="rune-stone">✦</div></button>
+            <button class="hand-card selected"><span class="card-number">05</span><span class="card-cost">1</span><div class="rune-stone">⊙</div></button>
+            <button class="hand-card"><span class="card-number">06</span><span class="card-cost">2</span><div class="rune-stone">╳</div></button>
+            <button class="hand-card"><span class="card-number">07</span><span class="card-cost">1</span><div class="rune-stone">◌</div></button>
+            <button class="hand-card locked"><span class="card-number">08</span><span class="card-cost">2</span><div class="rune-stone">◈</div></button>
+            <button class="hand-card"><span class="card-number">09</span><span class="card-cost">1</span><div class="rune-stone">⌁</div></button>
+            <button class="hand-card"><span class="card-number">10</span><span class="card-cost">2</span><div class="rune-stone">△</div></button>
+          </div>
+          <div class="controls"><span class="hint">Selected: 2 / 2 · locked slots cannot reroll</span><div class="buttons"><button class="button secondary">View rune details</button><button class="button">End phase</button></div></div>
+        </div>
+      </section>
+
+      <footer class="bottom-bar"><div class="event-log"><span>Deck 52</span><span>Discard 11</span><span>Rerolls 2</span></div><div>Activation order · 1 2 3 4 5 6 7 7 6 5 4 3 2 1</div></footer>
+    </section>
+  </main>
+</body>
+</html>
