@@ -18,10 +18,12 @@ var schedule: Array[Dictionary] = [
 var block_index := 0
 var block_remaining := 0
 var active_player := -1
+var first_player := PLAYER_ONE
 
 func start_round() -> void:
 	boards = [_empty_board(), _empty_board()]
 	block_index = 0
+	first_player = PLAYER_ONE
 	_load_block()
 
 func place_rune(player_index: int, hand_index: int, slot_index: int, hands: Array, log: EventLog) -> bool:

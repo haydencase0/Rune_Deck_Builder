@@ -42,7 +42,7 @@ func resolve_round() -> Dictionary:
 		return {"result": "invalid", "reason": "Placement is not complete."}
 	phase = Phase.RESOLVE
 	var resolver := SequenceResolver.new()
-	resolver.resolve(placement.boards, resources, event_log)
+	resolver.resolve(placement.boards, resources, event_log, placement.first_player)
 	last_result = DefeatResolver.determine_result(resources)
 	event_log.record("outcome", str(last_result.get("reason", "Round complete.")), last_result)
 	_discard_played_runes()
@@ -57,4 +57,4 @@ func _discard_played_runes() -> void:
 			decks[player_index].discard(rune)
 
 func _new_resources() -> Dictionary:
-	return {"health": 100, "mana": 5, "sanity": 100, "life_lost": 0}
+	return {"health": RuneDefinitions.RULES.starting_health, "mana": RuneDefinitions.RULES.starting_mana, "sanity": RuneDefinitions.RULES.starting_sanity, "life_lost": 0}

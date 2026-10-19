@@ -2,6 +2,12 @@
 
 This folder is the first Godot 4 project for the Rune Roguelike battle prototype.
 
+The rules layer now includes the 37-rune catalog and the deterministic core
+ported from `../silly-things`: 10-rune draws, the 74-rune test pool, live
+health/mana/sanity costs, fizzle checks, mana overflow damage, and the fixed
+26-activation forward/return route. State-heavy effects such as Copy, Echo,
+Lie, defenses, and draft choices remain queued for the next rules pass.
+
 The project is intentionally split into two layers:
 
 - `rules/` contains deterministic match logic and does not depend on UI nodes.

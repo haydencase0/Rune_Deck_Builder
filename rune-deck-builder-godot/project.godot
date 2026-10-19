@@ -1,7 +1,18 @@
-; Rune Roguelike Godot project
-; Generated as the initial deterministic battle scaffold.
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
+
+[application]
+
+config/name="Rune Roguelike"
+run/main_scene="res://ui/battle_screen.tscn"
+config/features=PackedStringArray("4.7")
 
 [display]
 
@@ -15,9 +26,3 @@ window/stretch/mode="canvas_items"
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-textures/default_filters/use_nearest_mipmap_filter=false
-
-[application]
-
-config/name="Rune Roguelike"
-run/main_scene="res://ui/battle_screen.tscn"

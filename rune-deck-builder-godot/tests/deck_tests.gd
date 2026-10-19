@@ -12,6 +12,6 @@ static func run() -> Dictionary:
 	hand.resolve_reroll(deck, log)
 	return {
 		"name": "deck_and_hand",
-		"passed": before == 10 and hand.hand_count() == 10 and deck.cards_remaining() == 60,
-		"details": "10-card hand, batch reroll, and 70-card deck scaffold"
+		"passed": before == 10 and hand.hand_count() == 10 and deck.cards_remaining() == 64,
+		"details": "10-card hand, batch reroll, and catalog deck"
 	}

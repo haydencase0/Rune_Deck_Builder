@@ -1,7 +1,7 @@
 class_name HandManager
 extends RefCounted
 
-const HAND_SIZE := 10
+const HAND_SIZE := RuneDefinitions.RULES.hand_size
 
 var slots: Array[Dictionary] = []
 var reroll_locks: Array[bool] = []
