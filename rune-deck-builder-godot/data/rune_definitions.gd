@@ -46,4 +46,9 @@ static func display_name(rune: Dictionary) -> String:
 
 static func can_pay(player: Dictionary, rune: Dictionary) -> bool:
 	var cost: Dictionary = rune.get("cost", {})
-	return int(player.get("health", 0)) >= int(cost.get("health", 0)) and int(player.get("mana", 0)) >= int(cost.get("mana", 0)) and int(player.get("sanity", 0)) >= int(cost.get("sanity", 0))
+	var mana_cost := int(cost.get("mana", 0))
+	# Mana-spending runes must leave a positive balance. Free runes can still
+	# activate at zero mana, including the runes that generate starting mana.
+	if mana_cost > 0 and int(player.get("mana", 0)) <= mana_cost:
+		return false
+	return int(player.get("health", 0)) >= int(cost.get("health", 0)) and int(player.get("sanity", 0)) >= int(cost.get("sanity", 0))

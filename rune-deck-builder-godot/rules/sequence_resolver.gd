@@ -1,7 +1,7 @@
 class_name SequenceResolver
 extends RefCounted
 
-## Resolves the fixed 14-forward / 12-return route used by Mirror Archive.
+## Resolves the fixed 14-forward / 14-return route used by Mirror Archive.
 ## The route is derived from the opening player, so placement and resolution
 ## remain deterministic for a seeded match.
 
@@ -20,35 +20,40 @@ func resolution_route(first_player: int) -> Array[Dictionary]:
 		batch = 2
 	var route := forward.duplicate(true)
 	for index in range(forward.size() - 1, -1, -1):
-		if int(forward[index]["slot"]) != RuneDefinitions.SLOT_COUNT - 1:
-			var entry: Dictionary = forward[index].duplicate(true)
-			entry["direction"] = -1
-			route.append(entry)
+		var entry: Dictionary = forward[index].duplicate(true)
+		entry["direction"] = -1
+		route.append(entry)
 	return route
 
 func resolve(boards: Array, resources: Array[Dictionary], log: EventLog, first_player: int = 0) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	var route := resolution_route(first_player)
 	for event_index in range(route.size()):
-		var step: Dictionary = route[event_index]
-		var player_index := int(step["player"])
-		var slot_index := int(step["slot"])
-		var event := {"event": event_index + 1, "player": player_index, "slot": slot_index + 1, "direction": step["direction"], "effects": []}
-		log.record("activation", "Activation %d: Player %d, slot %d." % [event_index + 1, player_index + 1, slot_index + 1], event)
-		var rune: Dictionary = boards[player_index][slot_index]
-		if not rune.is_empty():
-			var effect := _apply_rune(rune, player_index, slot_index, boards, resources)
-			event["effects"].append(effect)
-			log.record("effect", effect["message"], effect)
-		events.append(event)
+		events.append(resolve_step(route[event_index], event_index + 1, boards, resources, log))
 	return events
+
+func resolve_step(step: Dictionary, event_number: int, boards: Array, resources: Array[Dictionary], log: EventLog) -> Dictionary:
+	var player_index := int(step["player"])
+	var slot_index := int(step["slot"])
+	var event := {"event": event_number, "player": player_index, "slot": slot_index + 1, "direction": step["direction"], "effects": []}
+	log.record("activation", "Activation %d: Player %d, slot %d." % [event_number, player_index + 1, slot_index + 1], event)
+	var rune: Dictionary = boards[player_index][slot_index]
+	if not rune.is_empty():
+		var effect := _apply_rune(rune, player_index, slot_index, boards, resources)
+		event["effects"].append(effect)
+		log.record("effect", effect["message"], effect)
+	return event
 
 func _apply_rune(rune: Dictionary, player_index: int, slot_index: int, boards: Array, resources: Array[Dictionary]) -> Dictionary:
 	var key := str(rune.get("key", rune.get("id", "")))
 	var cost: Dictionary = rune.get("cost", {})
 	var message := "Player %d used %s." % [player_index + 1, RuneDefinitions.display_name(rune)]
 	if not RuneDefinitions.can_pay(resources[player_index], rune):
-		return {"player": player_index, "rune_id": rune.get("instance_id", ""), "fizzled": true, "message": "%s fizzled: its cost could not be paid." % RuneDefinitions.display_name(rune)}
+		var reason := "its cost could not be paid."
+		var mana_cost := int(cost.get("mana", 0))
+		if mana_cost > 0 and int(resources[player_index].get("mana", 0)) <= mana_cost:
+			reason = "paying its mana cost would leave mana at zero or below."
+		return {"player": player_index, "rune_id": rune.get("instance_id", ""), "fizzled": true, "message": "%s fizzled: %s" % [RuneDefinitions.display_name(rune), reason]}
 	_pay(resources[player_index], cost)
 	var target := 1 - player_index
 	match key:

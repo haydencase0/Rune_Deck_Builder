@@ -20,18 +20,23 @@ var block_remaining := 0
 var active_player := -1
 var first_player := PLAYER_ONE
 
-func start_round() -> void:
+func reset() -> void:
 	boards = [_empty_board(), _empty_board()]
 	block_index = 0
+	block_remaining = 0
+	active_player = -1
 	first_player = PLAYER_ONE
+
+func start_round() -> void:
+	reset()
 	_load_block()
 
 func place_rune(player_index: int, hand_index: int, slot_index: int, hands: Array, log: EventLog) -> bool:
 	if player_index != active_player or block_remaining <= 0:
 		return false
-	if slot_index < 0 or slot_index >= 7 or not boards[player_index][slot_index].is_empty():
-		return false
 	if player_index < 0 or player_index >= hands.size():
+		return false
+	if slot_index < 0 or slot_index >= RuneDefinitions.SLOT_COUNT or not boards[player_index][slot_index].is_empty():
 		return false
 	var rune: Dictionary = hands[player_index].take_rune(hand_index)
 	if rune.is_empty():

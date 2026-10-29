@@ -2,6 +2,7 @@ class_name HandManager
 extends RefCounted
 
 const HAND_SIZE := RuneDefinitions.RULES.hand_size
+const REROLL_LIMIT := RuneDefinitions.RULES.rerolls
 
 var slots: Array[Dictionary] = []
 var reroll_locks: Array[bool] = []
@@ -29,16 +30,21 @@ func refill(deck: DeckManager) -> void:
 			reroll_locks[empty_index] = false
 
 func select_for_reroll(index: int) -> bool:
-	if not _valid_index(index) or reroll_locks[index]:
+	if not _valid_index(index) or slots[index].is_empty() or reroll_locks[index]:
 		return false
 	if reroll_selection.has(index):
 		reroll_selection.erase(index)
 	else:
+		if rerolls_remaining() == 0:
+			return false
 		reroll_selection.append(index)
 	return true
 
+func rerolls_remaining() -> int:
+	return maxi(0, REROLL_LIMIT - reroll_selection.size())
+
 func resolve_reroll(deck: DeckManager, log: EventLog) -> void:
-	var selected := reroll_selection.duplicate()
+	var selected := reroll_selection.slice(0, REROLL_LIMIT)
 	selected.sort()
 	var returned_runes: Array[Dictionary] = []
 	for index in selected:

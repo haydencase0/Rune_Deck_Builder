@@ -1,7 +1,11 @@
 extends SceneTree
 
 func _init() -> void:
-	var results := [DeckTests.run(), SequenceTests.run(), MatchTests.run()]
+	call_deferred("_run")
+
+func _run() -> void:
+	var results := [DeckTests.run(), SequenceTests.run(), MatchTests.run(), ComputerTests.run(), RoundTests.run(), ResolutionTests.run(), ManaTests.run()]
+	results.append(await BattleScreenTests.run(self))
 	var all_passed := true
 	for result in results:
 		print("[%s] %s — %s" % ["PASS" if result["passed"] else "FAIL", result["name"], result["details"]])
